@@ -20,7 +20,7 @@ import {
 import Tab from './Tab'
 import NaivgationUtil from '../navigator/NavigationUtil';
 type Props = {};
-export default class HomePage extends Component < Props > {
+export default class HomePage extends Component <Props> {
   render() {
     NaivgationUtil.navigation = this.props.navigation;
     return (

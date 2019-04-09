@@ -4,8 +4,25 @@ import WelcomePage from '../pages/WelcomePage'
 import DetailPage from '../pages/DetailPage'
 import HomePage from '../pages/HomePage'
 
-const MainNavigator = createStackNavigator({ HomePage: HomePage, DetailPage: DetailPage });
-const InitNavigator = createStackNavigator({ WelcomePage: WelcomePage });
+const MainNavigator = createStackNavigator({
+  HomePage: {
+    screen:HomePage,
+    navigationOptions: {
+      header: null
+    }
+  },
+  DetailPage: {
+    screen:DetailPage
+  }
+});
+const InitNavigator = createStackNavigator({
+   WelcomePage: {
+    screen:WelcomePage,
+    navigationOptions: {
+      header: null
+    }
+  }
+});
 
 export default createAppContainer(createSwitchNavigator(
   {
