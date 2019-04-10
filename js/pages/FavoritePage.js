@@ -1,23 +1,11 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
 import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View, Button} from 'react-native';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
 
-type Props = {};
-export default class FavoritePage extends Component <Props> {
+import {connect} from 'react-redux'
+import {onThemeChange} from '../action/theme'
+
+export class FavoritePage extends Component {
   render() {
     const { navigation } = this.props
     return (
@@ -26,16 +14,27 @@ export default class FavoritePage extends Component <Props> {
           <Button
               title="改变主题色"
                 onPress={() => {
-                    navigation.setParams({theme:{
-                        tintColor:'red',
-                        updateTime:new Date().getTime()
-                    }})
+                    // navigation.setParams({theme:{
+                    //     tintColor:'red',
+                    //     updateTime:new Date().getTime()
+                    // }})
+                    this.props.onThemeChange('#096');
                 }}
           />
       </View>
     );
   }
 }
+
+const mapStateToProps = state => ({});
+
+const mapDispatchToProps = dispatch => ({
+  onThemeChange: (theme) => dispatch(onThemeChange(theme)),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(FavoritePage);
+
+
 
 const styles = StyleSheet.create({
   container: {

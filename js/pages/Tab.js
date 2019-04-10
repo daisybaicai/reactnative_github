@@ -4,7 +4,7 @@ import {
     createAppContainer,
     BottomTabBar
 } from 'react-navigation';
-
+import {connect} from 'react-redux';
 import FavoritePage from './FavoritePage';
 import MyPage from './MyPage';
 import PopularPage from './PopularPage';
@@ -68,7 +68,7 @@ const _tab = {
     }    
 }
 
-export default class DynamicTabNavigator extends Component{
+export  class DynamicTabNavigator extends Component{
     _tabNavigator() {
         if (this.Tabs) {
             return this.Tabs;
@@ -101,16 +101,15 @@ class TabBarComponent extends Component {
     }
 
     render() {
-        const {routes, index} = this.props.navigation.state;
-        if (routes[index].params) {
-            const {theme} = routes[index].params;
-            if (theme && theme.updateTime > this.theme.updateTime) {
-                this.theme = theme;
-            }
-        }
         return <BottomTabBar
             {...this.props}
-            activeTintColor={this.theme.tintColor||this.props.activeTintColor}
+            activeTintColor={this.props.theme}
         />
     }
 }
+
+const mapStateToProps = state => ({
+    theme: state.theme.theme,
+});
+
+export default connect(mapStateToProps)(DynamicTabNavigator);
