@@ -1,18 +1,14 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
-import {
-    createMaterialTopTabNavigator, createAppContainer
-} from 'react-navigation';
-
-import Tab1 from './Tab1';
+import { StyleSheet, Text, View, FlatList, RefreshControl, ActivityIndicator} from 'react-native';
+import { createMaterialTopTabNavigator, createAppContainer } from 'react-navigation';
+import { connect } from 'react-redux';
+import actions from '../action/index';
+import PopularItem from '../common/PopularItem';
+import Toast from 'react-native-easy-toast'
+const URL = 'https://api.github.com/search/repositories?q=';
+const SORT = '&sort=stars&order=desc';
+const THEME_COLOR = 'red';
+const pageSize = 10;
 
 export default class PopularPage extends Component {
   constructor(props) {
@@ -24,7 +20,7 @@ export default class PopularPage extends Component {
     const tabs = {};
     this.tabNames.forEach((item, index) => {
       tabs[`tab${index}`] = {
-        screen: Tab1,
+        screen: props => <PopularTabPage {...props} tabLabel={item}></PopularTabPage>,
         navigationOptions: {
           title: item
         }
@@ -52,8 +48,123 @@ export default class PopularPage extends Component {
       <TabNavigator></TabNavigator>
     );
   }
+
+}
+class PopularTab extends Component {
+  constructor(props){
+    super(props)
+    const {tabLabel} = this.props
+    this.storeName = tabLabel
+  }
+  componentDidMount() {
+    this.onLoadData()
+  }
+  onLoadData(loadMore) {
+    const { onLoadRefresh , onLoadMore } = this.props
+    const store = this._store();
+    let storeName = this.storeName
+    let url = this.createUrl(storeName)
+    if (loadMore) {
+      onLoadMore(storeName, ++store.pageIndex, pageSize, store.items, callBack(() => {
+        this,refs.toast.show('没有更多了');
+      }))
+    } else {
+      onLoadRefresh(storeName, url, pageSize)
+    }
+  }
+  createUrl(storeName) {
+    return URL + storeName + SORT;
+  }
+  renderItem({item}) {
+    return(
+      <PopularItem
+        item={item}
+        onSelect = {()=> {
+        }}
+      >
+      </PopularItem>
+    )
+  }
+  _store() {
+    const { popular } = this.props;
+    let store = popular[this.storeName];
+    if (!store) {
+      store = {
+        items: [],
+        isLoading: false,
+        projectModes: [], // 要显示的数据
+        hideLoadingMore: true, // 默认加载更多
+      }
+    }
+    return store;
+  }
+
+  genIndicator() {
+    return this._store().hideLoadingMore ? null :
+      <View style={styles.indicatorContainer}>
+        <ActivityIndicator
+          style={styles.indicator}
+        />
+        <Text>正在加载更多</Text>
+      </View>
+  }
+
+  render() {
+    const { popular } = this.props;
+    let store = this._store();
+    return (
+      <View>
+      <FlatList
+        data={store.projectModes}
+        keyExtractor={item => "" + item.id}
+        renderItem={data => this.renderItem(data)}
+        refreshControl = {
+          <RefreshControl
+            title={'Loading'}
+            titleColor={THEME_COLOR}
+            colors={[THEME_COLOR]}
+            refreshing={store.isLoading}
+            onRefresh={() => this.onLoadData()}
+            tintColor={THEME_COLOR}
+          ></RefreshControl>
+        }
+        ListFooterComponent={() => this.genIndicator()}
+        onEndReached={() => {
+          console.log('---onEndReached----');
+          setTimeout(() => {
+            if (this.canLoadMore) {//fix 滚动时两次调用onEndReached https://github.com/facebook/react-native/issues/14015
+              this.onLoadData(true);
+              this.canLoadMore = false;
+            }
+          }, 100);
+        }}
+        onEndReachedThreshold={0.5}
+        onMomentumScrollBegin={() => {
+          this.canLoadMore = true; //fix 初始化时页调用onEndReached的问题
+          console.log('---onMomentumScrollBegin-----')
+        }}
+      > 
+      </FlatList>
+      <Toast
+        ref={'toast'}
+        position={'center'}
+      ></Toast>
+      </View>
+    );
+  }
 }
 
+const mapStateToProps = state => ({
+  popular: state.popular
+})
+
+const mapDispatchToProps = dispatch => ({
+  onLoadRefresh: (storeName, url, pageSize) => dispatch(actions.onRefreshPopular(storeName, url, pageSize)),
+  onLoadMore: (storeName, pageIndex, pageSize, items, callBack) => dispatch(actions.onLoadMorePopular(storeName, pageIndex, pageSize, items, callBack))
+})
+
+
+const PopularTabPage = connect(mapStateToProps, mapDispatchToProps)(PopularTab)
 
 const styles = StyleSheet.create({
   container: {
